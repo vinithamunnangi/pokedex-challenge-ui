@@ -25,5 +25,7 @@ exports.typeDefs = gql`
   type Query {
     pokemonMany: [Pokemon!]!
     pokemonOne(id: ID!): Pokemon
+    pokemonTypes: [String!]!
+    pokemonWeaknesses: [String!]!
   }
 `

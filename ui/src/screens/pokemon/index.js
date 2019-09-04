@@ -11,9 +11,12 @@ import PokemonCard from '../../components/PokemonCard'
 import * as S from './styled'
 
 export default function PokemonScreen({ num }) {
+  // regular expression to remove leading zeros is wrong.
+  // /0/g - replaces all zeros
+  // ^0+/g - replaces leading zeros
   const { loading, error, data } = useQuery(gql`
     {
-      pokemonOne(id: ${num.replace(/0/g, '')}) {
+      pokemonOne(id: ${num.replace(/^0+/g, '')}) {
         num
         name
         img

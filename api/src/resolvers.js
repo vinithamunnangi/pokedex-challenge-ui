@@ -19,5 +19,7 @@ exports.resolvers = {
   Query: {
     pokemonMany: (parent, args, context, info) => _.values(context.pokemon),
     pokemonOne: (parent, args, context, info) => context.pokemon[args.id],
+    pokemonTypes: (parent, args, context, info) =>  _.uniq(_.flatten(_.values(context.pokemon).map(p => p.type))),
+    pokemonWeaknesses: (parent, args, context, info) => _.uniq(_.flatten(_.values(context.pokemon).map(p => p.weaknesses))),
   },
 }

@@ -1,10 +1,35 @@
 import React, { useState } from 'react'
 import Downshift from 'downshift'
-import { Paper, Popper } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles';
+import { Paper, Popper, InputLabel, Input, MenuItem, Checkbox, ListItemText, Select, FormControl } from '@material-ui/core'
+import FilterListIcon from '@material-ui/icons/FilterList'
 import _ from 'lodash'
 import { navigate } from '@reach/router'
 
 import * as S from './styled'
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 300,
+    },
+  },
+};
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 200,
+    maxWidth: 200,
+  },
+}));
 
 function renderInput(inputProps) {
   const { InputProps, ref, ...other } = inputProps
@@ -62,9 +87,14 @@ function getSuggestions(value, { showEmpty = false } = {}, suggestions) {
 }
 
 let popperNode
+let filterNode
 
-export default function SearchBox({ suggestions, children }) {
+export default function SearchBox({ suggestions, children, types, weaknesses }) {
+  const classes = useStyles();
   const [value, setValue] = useState('')
+  const [pokemonTypes, setPokemonTypes] = useState([])
+  const [pokemonWeaknesses, setPokemonWeaknesses] = useState([])
+  const [anchorFilterEl, setAnchorFilterEl] = React.useState(null)
 
   function stateReducer(state, changes) {
     switch (changes.type) {
@@ -75,6 +105,20 @@ export default function SearchBox({ suggestions, children }) {
         return changes
     }
   }
+
+  function filterClicked(e) {
+    setAnchorFilterEl(anchorFilterEl ? null : e.currentTarget)
+  }
+
+  function handlePokemonTypeChange(e) {
+    setPokemonTypes(e.target.value)
+  }
+
+  function handlePokemonWeaknesses(e) {
+    setPokemonWeaknesses(e.target.value)
+  }
+
+  const isFilterOpen = Boolean(anchorFilterEl)
 
   return (
     <Downshift inputValue={value} stateReducer={stateReducer}>
@@ -96,7 +140,6 @@ export default function SearchBox({ suggestions, children }) {
           <div>
             <div>
               {renderInput({
-                fullWidth: true,
                 InputProps: { onBlur, onFocus },
                 InputLabelProps: getLabelProps({ shrink: true }),
                 inputProps,
@@ -104,6 +147,58 @@ export default function SearchBox({ suggestions, children }) {
                   popperNode = node
                 },
               })}
+              <FilterListIcon onClick={filterClicked} ref={node => {filterNode = node}}/>
+              <Popper open={isFilterOpen} anchorEl={filterNode}>
+                <Paper
+                  square
+                  style={{
+                    marginTop: 8,
+                    width: 500,
+                    height: 200,
+                    position: 'relative',
+                    right: '2rem',
+                  }}
+                >
+                  <div className={classes.root}>
+                    <FormControl className={classes.formControl}>
+                      <InputLabel htmlFor="PokemonType">Type</InputLabel>
+                      <Select
+                        multiple
+                        value={pokemonTypes}
+                        onChange={handlePokemonTypeChange}
+                        input={<Input id="PokemonType" />}
+                        renderValue={selected => selected.join(', ')}
+                        MenuProps={MenuProps}
+                      >
+                        {types.map(type => (
+                          <MenuItem key={type} value={type}>
+                            <Checkbox checked={pokemonTypes.indexOf(type) > -1} />
+                            <ListItemText primary={type} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl className={classes.formControl}>
+                      <InputLabel htmlFor="PokemonWeaknesses">Weaknesses</InputLabel>
+                      <Select
+                        multiple
+                        value={pokemonWeaknesses}
+                        onChange={handlePokemonWeaknesses}
+                        input={<Input id="PokemonWeaknesses" />}
+                        renderValue={selected => selected.join(', ')}
+                        MenuProps={MenuProps}
+                      >
+                        {weaknesses.map(w => (
+                          <MenuItem key={w} value={w}>
+                            <Checkbox checked={pokemonWeaknesses.indexOf(w) > -1} />
+                            <ListItemText primary={w} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                </Paper>
+              </Popper>
               <Popper open={isOpen} anchorEl={popperNode}>
                 <div
                   {...(isOpen
@@ -133,7 +228,7 @@ export default function SearchBox({ suggestions, children }) {
                 </div>
               </Popper>
             </div>
-            {children(inputValue)}
+            {children(inputValue, { weaknesses: pokemonWeaknesses, types: pokemonTypes })}
           </div>
         )
       }}

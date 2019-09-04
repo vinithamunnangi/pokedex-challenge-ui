@@ -17,6 +17,8 @@ export default function HomeScreen() {
         type
         weaknesses
       }
+      pokemonTypes
+      pokemonWeaknesses
     }
   `)
   if (loading)
@@ -39,17 +41,27 @@ export default function HomeScreen() {
           label: pokemon.name,
           value: pokemon.num,
         }))}
+        types={data.pokemonTypes}
+        weaknesses={data.pokemonWeaknesses}
       >
-        {searchValue => (
+        {(searchValue, filter) => (
           <S.Grid>
             {data.pokemonMany
-              .filter(pokemon =>
-                searchValue
-                  ? _.deburr(pokemon.name.toLowerCase()).includes(
-                      _.deburr(searchValue.toLowerCase())
-                    )
-                  : true
-              )
+              .filter(pokemon => {
+                let include = true;
+                if (filter.types.length > 0) {
+                  include = pokemon.type.filter(t => filter.types.includes(t)).length !== 0
+                }
+                if (filter.weaknesses.length > 0) {
+                  include = pokemon.weaknesses.filter(w => filter.weaknesses.includes(w)).length !== 0
+                }
+                if (searchValue) {
+                  include = _.deburr(pokemon.name.toLowerCase()).includes(
+                    _.deburr(searchValue.toLowerCase())
+                  )
+                }
+                return include
+              })
               .map(pokemon => (
                 <S.CardContainer key={pokemon.num}>
                   <S.CardLink to={`/${pokemon.num}`}>
